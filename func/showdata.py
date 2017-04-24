@@ -4,11 +4,16 @@
 Module implementing showDataWindow.
 """
 
-from PyQt4.QtCore import pyqtSignature
+from PyQt4.QtCore import pyqtSignature,QUrl,QString
 from PyQt4.QtGui import QDialog
+import os
 
 from ui.Ui_showdata import Ui_showDataWindow
-
+try:
+    _fromUtf8 = QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
 
 class showDataWindow(QDialog, Ui_showDataWindow):
     """
@@ -17,13 +22,15 @@ class showDataWindow(QDialog, Ui_showDataWindow):
     def __init__(self, parent=None):
         """
         Constructor
-        
+
         @param parent reference to the parent widget
         @type QWidget
         """
         QDialog.__init__(self, parent)
         self.setupUi(self)
-        self.setFixedSize(628,436)
+        self.setFixedSize(700,450)
+        self.webView.setUrl(
+            QUrl(_fromUtf8("file:///" + '/'.join(os.getcwd().split('\\')) + "/echart/show.html")))
     
     @pyqtSignature("bool")
     def on_webView_loadFinished(self, p0):

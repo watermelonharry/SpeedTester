@@ -74,22 +74,16 @@ class Ui_Dialog(object):
         self.showResultBtn = QtGui.QPushButton(Dialog)
         self.showResultBtn.setGeometry(QtCore.QRect(170, 170, 111, 31))
         self.showResultBtn.setObjectName(_fromUtf8("showResultBtn"))
-        self.remoteIpInput = QtGui.QPlainTextEdit(Dialog)
-        self.remoteIpInput.setGeometry(QtCore.QRect(140, 30, 131, 21))
-        font = QtGui.QFont()
-        font.setPointSize(9)
-        self.remoteIpInput.setFont(font)
-        self.remoteIpInput.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.remoteIpInput.setAutoFillBackground(False)
-        self.remoteIpInput.setFrameShape(QtGui.QFrame.StyledPanel)
-        self.remoteIpInput.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.remoteIpInput.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.remoteIpInput.setMaximumBlockCount(15)
-        self.remoteIpInput.setObjectName(_fromUtf8("remoteIpInput"))
         self.gapTimeEdit = QtGui.QTimeEdit(Dialog)
         self.gapTimeEdit.setGeometry(QtCore.QRect(140, 80, 71, 22))
         self.gapTimeEdit.setMinimumTime(QtCore.QTime(0, 1, 0))
         self.gapTimeEdit.setObjectName(_fromUtf8("gapTimeEdit"))
+        self.remoteIpInput = QtGui.QLineEdit(Dialog)
+        self.remoteIpInput.setGeometry(QtCore.QRect(140, 30, 113, 20))
+        self.remoteIpInput.setMaxLength(15)
+        self.remoteIpInput.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.remoteIpInput.setObjectName(_fromUtf8("remoteIpInput"))
+
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -101,7 +95,7 @@ class Ui_Dialog(object):
         self.startOneTestBtn.setText(_translate("Dialog", "开始单次测试", None))
         self.startAutoTestBtn.setText(_translate("Dialog", "开始定时测试", None))
         self.showResultBtn.setText(_translate("Dialog", "定时测试结果", None))
-        self.remoteIpInput.setPlainText(_translate("Dialog", "192.168.1.128", None))
+        self.remoteIpInput.setText(_translate("Dialog", "192.168.1.137", None))
 
 
 if __name__ == "__main__":

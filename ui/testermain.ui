@@ -133,42 +133,6 @@
     <string>定时测试结果</string>
    </property>
   </widget>
-  <widget class="QPlainTextEdit" name="remoteIpInput">
-   <property name="geometry">
-    <rect>
-     <x>140</x>
-     <y>30</y>
-     <width>131</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>9</pointsize>
-    </font>
-   </property>
-   <property name="layoutDirection">
-    <enum>Qt::RightToLeft</enum>
-   </property>
-   <property name="autoFillBackground">
-    <bool>false</bool>
-   </property>
-   <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="verticalScrollBarPolicy">
-    <enum>Qt::ScrollBarAlwaysOff</enum>
-   </property>
-   <property name="horizontalScrollBarPolicy">
-    <enum>Qt::ScrollBarAlwaysOff</enum>
-   </property>
-   <property name="plainText">
-    <string>192.168.1.128</string>
-   </property>
-   <property name="maximumBlockCount">
-    <number>15</number>
-   </property>
-  </widget>
   <widget class="QTimeEdit" name="gapTimeEdit">
    <property name="geometry">
     <rect>
@@ -184,6 +148,25 @@
      <minute>1</minute>
      <second>0</second>
     </time>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="remoteIpInput">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>30</y>
+     <width>113</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>192.168.1.137</string>
+   </property>
+   <property name="maxLength">
+    <number>15</number>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
    </property>
   </widget>
  </widget>
