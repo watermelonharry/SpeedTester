@@ -6,4 +6,11 @@ class LocalStatus():
         self.WAIT
 
 
+
+
 LOCAL_STATUS = LocalStatus()
+
+NOTICE_DICT = {
+    1:u'测试1',
+    2:u'测试2',
+}

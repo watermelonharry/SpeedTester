@@ -121,7 +121,7 @@ class testermain(QDialog, Ui_Dialog):
             <script src="static/echarts.js"></script>
         </head>
         <body>
-            <div id="main" style="width: 700px;height:450px;"></div>
+            <div id="main" style="width: 690px;height:430px;"></div>
             <script type="text/javascript">
                 var myChart = echarts.init(document.getElementById('main'));
                 option = {
