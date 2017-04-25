@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <!-- 引入 ECharts 文件 -->
+    <script src="static/echarts.js"></script>
+</head>
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="width: 700px;height:450px;"></div>
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main'));
+
+        // 指定图表的配置项和数据
+        option = {
+			title: {
+			    text: '网速测试结果',
+			    subtext: '@20170424'
+			},
+			tooltip: {
+			    trigger: 'axis'
+			},
+			legend: {
+			    data:['网速测试']
+			},
+			toolbox: {
+			    show: true,
+			    feature: {
+			        dataZoom: {
+			            yAxisIndex: 'none'
+			        },
+			        dataView: {readOnly: false},
+			        magicType: {type: ['line', 'bar']},
+			        restore: {},
+			    }
+			},
+			xAxis:  {
+			    type: 'category',
+			    boundaryGap: false,
+			    data: ['11:00','11:02','11:04','11:06','11:08','11:10','11:12','11:14']
+			},
+			yAxis: {
+			    type: 'value',
+			    axisLabel: {
+			        formatter: '{value} Kbps'
+			    }
+			},
+			series: [
+			    {
+			        name:'网速测试',
+			        type:'line',
+			        data:[110, 11, 15, 130, 12, 313, 10, 11],
+			        markPoint: {
+			            data: [
+			                {type: 'max', name: '最大值'},
+			                {type: 'min', name: '最小值'}
+			            ]
+			        },
+			        markLine: {
+			            data: [
+			                {type: 'average', name: '平均值'}
+			            ]
+			        }
+			    }
+			]
+			};
+
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    </script>
+</body>
+</html>

@@ -70,6 +70,7 @@ class testermain(QDialog, Ui_Dialog):
         """
         Slot documentation goes here.
         """
+        self.showWindow.webView.reload()
         self.showWindow.show()
 
 
