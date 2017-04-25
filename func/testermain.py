@@ -63,7 +63,10 @@ class testermain(QDialog, Ui_Dialog):
         Slot documentation goes here.
         """
         # TODO: not implemented yet
-        raise NotImplementedError
+        print('test for html')
+        timeList = ['1:10','1:20','1:30','1:40']
+        speedList = [20,100,30,10]
+        self.updateChart(timeList, speedList)
 
     @pyqtSignature("")
     def on_showResultBtn_clicked(self):
@@ -99,6 +102,89 @@ class testermain(QDialog, Ui_Dialog):
         """
         # TODO: not implemented yet
         pass
+
+    def updateChart(self, timeList, speedList):
+        """
+        用于更新数据至本地图表
+        :param timeList: 时间列表，eg. ['1:10','1:20','1:30','1:40']
+        :param speedList: 速度列表， eg. [20,100,30,10]
+        :return:
+        """
+        timeList = ['\''+str(c)+'\'' for c in timeList]
+        timeStr = ','.join(timeList)
+        speedStr = ','.join([str(c) for c in speedList])
+        content = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <script src="static/echarts.js"></script>
+        </head>
+        <body>
+            <div id="main" style="width: 700px;height:450px;"></div>
+            <script type="text/javascript">
+                var myChart = echarts.init(document.getElementById('main'));
+                option = {
+                    title: {
+                        text: '网速测试结果',
+                        subtext: '@heyu'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data:['网速测试']
+                    },
+                    toolbox: {
+                        show: true,
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: 'none'
+                            },
+                            dataView: {readOnly: false},
+                            magicType: {type: ['line', 'bar']},
+                            restore: {},
+                        }
+                    },
+                    xAxis:  {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: [%s]
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                            formatter: '{value} Kbps'
+                        }
+                    },
+                    series: [
+                        {
+                            name:'网速测试',
+                            type:'line',
+                            data:[%s],
+                            markPoint: {
+                                data: [
+                                    {type: 'max', name: '最大值'},
+                                    {type: 'min', name: '最小值'}
+                                ]
+                            },
+                            markLine: {
+                                data: [
+                                    {type: 'average', name: '平均值'}
+                                ]
+                            }
+                        }
+                    ]
+                    };
+                myChart.setOption(option);
+            </script>
+        </body>
+        </html>
+        """ %(timeStr,speedStr)
+        with open('echart/show.html','w') as file:
+            file.writelines(content)
+        self.showWindow.webView.reload()
+        print timeStr,speedStr
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
