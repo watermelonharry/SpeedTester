@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_showDataWindow(object):
     def setupUi(self, showDataWindow):
         showDataWindow.setObjectName(_fromUtf8("showDataWindow"))
-        showDataWindow.resize(628, 436)
+        showDataWindow.resize(700, 450)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -33,10 +33,8 @@ class Ui_showDataWindow(object):
         showDataWindow.setSizePolicy(sizePolicy)
         showDataWindow.setSizeGripEnabled(True)
         self.webView = QtWebKit.QWebView(showDataWindow)
-        self.webView.setGeometry(QtCore.QRect(0, 0, 631, 431))
-        import os
-        self.webView.setUrl(QtCore.QUrl(_fromUtf8("file:///" + '/'.join(os.getcwd().split('\\')) + "/echart/show.html")))
-        print("file:///" + '/'.join(os.getcwd().split('\\')) + "/echart/show.html")
+        self.webView.setGeometry(QtCore.QRect(0, 0, 700, 450))
+        self.webView.setUrl(QtCore.QUrl(_fromUtf8("file:///echart/show.html")))
         self.webView.setObjectName(_fromUtf8("webView"))
 
         self.retranslateUi(showDataWindow)

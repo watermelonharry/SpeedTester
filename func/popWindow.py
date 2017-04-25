@@ -3,7 +3,7 @@
 from ui.Ui_popwindow import Ui_notice_window
 from PyQt4.QtGui import QDialog
 from PyQt4.QtCore import pyqtSignature
-from package.planeStatus import NOTICE_DICT as noticeDict
+from base.statusDict import NOTICE_DICT as noticeDict
 
 class NoticeWindow(QDialog, Ui_notice_window):
     def __init__(self,intArg = 0):
@@ -35,5 +35,3 @@ class NoticeWindow(QDialog, Ui_notice_window):
     def on_notice_cancel_btn_clicked(self):
         self.status = False
         self.close()
-
-

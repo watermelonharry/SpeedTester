@@ -7,7 +7,7 @@
 </head>
 <body>
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-    <div id="main" style="width: 690px;height:430px;"></div>
+    <div id="main" style="width: 700px;height:450px;"></div>
     <script type="text/javascript">
         // 基于准备好的dom，初始化echarts实例
         var myChart = echarts.init(document.getElementById('main'));
@@ -16,6 +16,7 @@
         option = {
 			title: {
 			    text: '网速测试结果',
+			    subtext: '@20170424'
 			},
 			tooltip: {
 			    trigger: 'axis'
