@@ -110,8 +110,8 @@
   <widget class="QPushButton" name="startAutoTestBtn">
    <property name="geometry">
     <rect>
-     <x>50</x>
-     <y>170</y>
+     <x>170</x>
+     <y>130</y>
      <width>111</width>
      <height>31</height>
     </rect>
@@ -167,6 +167,19 @@
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="clearResultBtn">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>170</y>
+     <width>111</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>清除测试记录</string>
    </property>
   </widget>
  </widget>

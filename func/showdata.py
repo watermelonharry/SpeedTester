@@ -42,7 +42,8 @@ class showDataWindow(QDialog, Ui_showDataWindow):
         """
         # TODO: not implemented yet
         pass
-    
+
+
     @pyqtSignature("QUrl")
     def on_webView_urlChanged(self, p0):
         """

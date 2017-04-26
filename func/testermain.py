@@ -36,14 +36,14 @@ class testermain(QDialog, Ui_Dialog):
         self.tester = None
         self.timer = None #计时器QTimer
 
-    def Confirm(self, intArg):
+    def Confirm(self, intArg, strArg = None):
         """
         确认窗口
         :param intArg:
         :return:确定返回True， 取消返回False
         """
         noticeWindow = NoticeWindow()
-        noticeWindow.Confirm(intArg)
+        noticeWindow.Confirm(intArg, strArg)
         return noticeWindow.status
 
     def verifyIp(self, ipStr):
@@ -93,11 +93,23 @@ class testermain(QDialog, Ui_Dialog):
 
 
     @pyqtSignature("")
+    def on_clearResultBtn_clicked(self):
+        """
+        Slot documentation goes here.
+        """
+        if self.status is TEST_STATUS.IDLE:
+            if self.Confirm(4001):
+                self.resultList = []
+        else:
+            self.Confirm(2001)
+
+
+    @pyqtSignature("")
     def on_showResultBtn_clicked(self):
         """
         Slot documentation goes here.
         """
-        self.showWindow.webView.reload()
+        # self.showWindow.webView.reload()
         self.showWindow.show()
 
 
@@ -115,6 +127,7 @@ class testermain(QDialog, Ui_Dialog):
         """
         # TODO: not implemented yet
         print('time edit finished')
+        self.Confirm(5001, u'哈')
         print(self.gapTimeEdit.time())
 
 

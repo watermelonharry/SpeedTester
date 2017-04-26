@@ -69,7 +69,7 @@ class Ui_Dialog(object):
         self.startOneTestBtn.setGeometry(QtCore.QRect(50, 130, 111, 31))
         self.startOneTestBtn.setObjectName(_fromUtf8("startOneTestBtn"))
         self.startAutoTestBtn = QtGui.QPushButton(Dialog)
-        self.startAutoTestBtn.setGeometry(QtCore.QRect(50, 170, 111, 31))
+        self.startAutoTestBtn.setGeometry(QtCore.QRect(170, 130, 111, 31))
         self.startAutoTestBtn.setObjectName(_fromUtf8("startAutoTestBtn"))
         self.showResultBtn = QtGui.QPushButton(Dialog)
         self.showResultBtn.setGeometry(QtCore.QRect(170, 170, 111, 31))
@@ -83,6 +83,9 @@ class Ui_Dialog(object):
         self.remoteIpInput.setMaxLength(15)
         self.remoteIpInput.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.remoteIpInput.setObjectName(_fromUtf8("remoteIpInput"))
+        self.clearResultBtn = QtGui.QPushButton(Dialog)
+        self.clearResultBtn.setGeometry(QtCore.QRect(50, 170, 111, 31))
+        self.clearResultBtn.setObjectName(_fromUtf8("clearResultBtn"))
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -96,6 +99,7 @@ class Ui_Dialog(object):
         self.startAutoTestBtn.setText(_translate("Dialog", "开始定时测试", None))
         self.showResultBtn.setText(_translate("Dialog", "定时测试结果", None))
         self.remoteIpInput.setText(_translate("Dialog", "192.168.1.137", None))
+        self.clearResultBtn.setText(_translate("Dialog", "清除测试记录", None))
 
 
 if __name__ == "__main__":

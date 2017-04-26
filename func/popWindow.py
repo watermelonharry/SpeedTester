@@ -17,14 +17,17 @@ class NoticeWindow(QDialog, Ui_notice_window):
         self.notice_content.setText(noticeDict[intArg])
         QDialog.show(self)
 
-    def exec_(self, intArg = 0):
-        self.notice_content.setText(noticeDict[intArg])
+    def exec_(self, intArg = 0, strArg = None):
+        if strArg is None:
+            self.notice_content.setText(noticeDict[intArg])
+        else:
+            self.notice_content.setText(noticeDict[intArg] + u'\n'+strArg)
         self.status = False
         QDialog.exec_(self)
 
 
-    def Confirm(self, intArg = 0):
-        self.exec_(intArg)
+    def Confirm(self, intArg = 0, strArg = None):
+        self.exec_(intArg, strArg)
 
     @pyqtSignature("")
     def on_notice_true_btn_clicked(self):
