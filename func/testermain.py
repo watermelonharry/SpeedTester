@@ -41,7 +41,7 @@ class testermain(QDialog, Ui_Dialog):
 
     def verifyIp(self, ipStr):
         ip = str(ipStr).split('.')
-        result =  len(ip) == 4 and len(filter(lambda x: x >= 0 and x <= 255, map(int, filter(lambda x:x.isdigit(), ip)))) == 4 and ip[0] != '0'
+        result =  (len(ip) == 4 and len(filter(lambda x: x >= 0 and x <= 255, map(int, filter(lambda x:x.isdigit(), ip)))) == 4 and ip[0] != '0')
         if result is True:
             self.Confirm(1)
             return True
