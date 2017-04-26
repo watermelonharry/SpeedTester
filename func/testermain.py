@@ -4,10 +4,10 @@
 Module implementing testermain.
 """
 
-from PyQt4.QtCore import pyqtSignature, QThread, pyqtSignal
+from PyQt4.QtCore import pyqtSignature, QThread, pyqtSignal, QTimer
 from PyQt4.QtGui import QDialog, QApplication
 import sys
-from ui.Ui_testermain import Ui_Dialog
+from ui.Ui_testermain import Ui_Dialog, _translate
 from showdata import showDataWindow
 from base.statusDict import TEST_STATUS
 from func.popWindow import NoticeWindow
@@ -34,6 +34,7 @@ class testermain(QDialog, Ui_Dialog):
         self.resultList = []  #保存测试结果
         self.updateSignal.connect(self.receiveTestData)
         self.tester = None
+        self.timer = None #计时器QTimer
 
     def Confirm(self, intArg):
         """
@@ -60,11 +61,13 @@ class testermain(QDialog, Ui_Dialog):
         Slot documentation goes here.
         """
         # TODO: not implemented yet
-        if self.verifyIp(self.remoteIpInput.text()):
-            #todo：需要输入ip和port
-            self.tester = UdpClientQThread(updateSignal=self.updateSignal)
-            self.status = LOCAL_STATUS.START
-            self.tester.start()
+        if self.status is TEST_STATUS.IDLE:
+            if self.verifyIp(self.remoteIpInput.text()):
+                #todo：需要输入ip和port
+                self.startOneTest()
+                self.status = TEST_STATUS.SINGLE_TEST
+        else:
+            self.Confirm(2001)
 
     @pyqtSignature("")
     def on_startAutoTestBtn_clicked(self):
@@ -72,10 +75,22 @@ class testermain(QDialog, Ui_Dialog):
         Slot documentation goes here.
         """
         # TODO: not implemented yet
-        print('test for html')
-        timeList = ['1:10','1:20','1:30','1:40']
-        speedList = [20,100,30,10]
-        self.updateChart(timeList, speedList)
+        if self.status is TEST_STATUS.IDLE:
+            #空闲状态，开始测试并改变UI、status
+            if self.Confirm(3001):
+                self.startAutoTestBtn.setText(_translate("Dialog","关闭定时测试",None))
+                self.status = TEST_STATUS.PLANNED_TEST
+
+                # print('test for html')
+                # timeList = ['1:10','1:20','1:30','1:40']
+                # speedList = [20,100,30,10]
+                # self.updateChart(timeList, speedList)
+
+        elif self.status is TEST_STATUS.PLANNED_TEST:
+            self.startAutoTestBtn.setText(_translate("Dialog","开始定时测试",None))
+            self.status = TEST_STATUS.IDLE
+
+
 
     @pyqtSignature("")
     def on_showResultBtn_clicked(self):
@@ -99,7 +114,9 @@ class testermain(QDialog, Ui_Dialog):
         Slot documentation goes here.
         """
         # TODO: not implemented yet
-        pass
+        print('time edit finished')
+        print(self.gapTimeEdit.time())
+
 
     @pyqtSignature("QTime")
     def on_gapTimeEdit_timeChanged(self, date):
@@ -110,12 +127,19 @@ class testermain(QDialog, Ui_Dialog):
         @type QTime
         """
         # TODO: not implemented yet
-        pass
+        print('time changed')
+        print(self.gapTimeEdit.time())
+
+    def startOneTest(self, ip = 'localhost', port = 10230):
+        # todo：需要输入ip和port
+        self.tester = UdpTestManager(updateSignal=self.updateSignal)
+        self.tester.start()
 
     def receiveTestData(self, dataTuple):
         self.resultList.append(dataTuple)
-        print(dataTuple)
+        print('main window recv: ', dataTuple)
         self.status = TEST_STATUS.IDLE
+        del self.tester
         self.tester = None
 
     def updateChart(self, timeList, speedList):
@@ -209,18 +233,21 @@ class UdpTestManager(QThread):
     """
     测速管理员，用于管理单次测速，格式化结果
     """
+    innerSignal = pyqtSignal(object)
+
     def __init__(self, repeatTime = 5, remoteIP='localhost', remotePort = 10230, updateSignal = None, parent = None):
-        super(UdpClientQThread, self).__init__(parent)
+        super(UdpTestManager, self).__init__(parent)
         self.updateSignal = updateSignal
         self.remoteIP = remoteIP
         self.remotePort = remotePort
 
         self.repeatTime = repeatTime
         self.testTime = ''
-        self.avrTime = 0
+        self.avrSpeed = 0
+
+        self.resultList =[] #用于存储上报结果
 
         #用于传递至单次测速类
-        self.innerSignal = pyqtSignal(object)
         self.innerSignal.connect(self.processTestData)
 
     def run(self):
@@ -229,7 +256,20 @@ class UdpTestManager(QThread):
         :return:
         """
         #todo：循环测试类
+        print('test manager start.')
 
+        ts = time.gmtime()
+        self.testTime = ':'.join(str(i) for i in [(ts.tm_hour + 8) % 24, ts.tm_min, ts.tm_sec])
+
+        for i in range(self.repeatTime):
+            singleTester = UdpClientQThread(self.remoteIP, self.remotePort,updateSignal=self.innerSignal)
+            singleTester.start()
+            while singleTester.isRunning():
+                time.sleep(0.5)
+            del singleTester
+            print('test finish, no.' + str(i+1))
+
+        self.sendToParent()
 
     def processTestData(self, dataTuple):
         """
@@ -238,16 +278,25 @@ class UdpTestManager(QThread):
         :return:
         """
         #todo:处理类
-        pass
+        print('manager rec from client:', dataTuple)
+        if dataTuple[0] is True:
+            self.resultList.append(dataTuple[2])
 
-    def sendToParent(self, dataTuple):
+    def sendToParent(self):
         """
         将处理结果发送给上层窗口类
         :param dataTuple: （FlagBool， timeStr， speedInt）
         :return:
         """
         #todo：发送类
-        pass
+        if len(self.resultList) >= 3:
+            self.avrSpeed = sum(self.resultList) / len(self.resultList)
+            self.updateSignal.emit((True, self.testTime, self.avrSpeed))
+            print('manager: test success.')
+        else:
+            self.updateSignal.emit((False, '-', '0'))
+            print('manager: test fail.')
+
 
 class UdpClientQThread(QThread):
     """
