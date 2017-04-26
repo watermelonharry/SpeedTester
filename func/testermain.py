@@ -33,6 +33,7 @@ class testermain(QDialog, Ui_Dialog):
         self.status = LOCAL_STATUS.WAIT
         self.resultList = []  #保存测试结果
         self.updateSignal.connect(self.receiveTestData)
+        self.tester = None
 
     def Confirm(self, intArg):
         """
@@ -61,11 +62,9 @@ class testermain(QDialog, Ui_Dialog):
         # TODO: not implemented yet
         if self.verifyIp(self.remoteIpInput.text()):
             #todo：需要输入ip和port
-            tester = UdpClientQThread(updateSignal=self.updateSignal)
+            self.tester = UdpClientQThread(updateSignal=self.updateSignal)
             self.status = LOCAL_STATUS.START
-            tester.start()
-            #迷之等待，跑太快会报错
-            time.sleep(0.1)
+            self.tester.start()
 
     @pyqtSignature("")
     def on_startAutoTestBtn_clicked(self):
@@ -117,6 +116,7 @@ class testermain(QDialog, Ui_Dialog):
         self.resultList.append(dataTuple)
         print(dataTuple)
         self.status = LOCAL_STATUS.WAIT
+        self.tester = None
 
     def updateChart(self, timeList, speedList):
         """
@@ -230,9 +230,7 @@ class UdpClientQThread(QThread):
 
     def run(self):
         print('client RUNNNIG.')
-        time.sleep(1)
         while(True):
-
             if self.STATUS is LOCAL_STATUS.READY:
                 #开始测试
                 #reset时间
