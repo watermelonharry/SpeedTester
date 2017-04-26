@@ -55,13 +55,16 @@ class UdpRemoteThread(threading.Thread):
                     # time.sleep(0.5)
                     self.udpServer.sendto('A', self.clientAddr)
                     self.STATUS = SERVER_STATUS.START
-                else:
-                    if self.clientAddr is not None:
+                elif data == 'E':
+                    self.STATUS = SERVER_STATUS.STOP
+                    print('cmd to close UDPserver.')
+                    break
+                elif self.clientAddr is not None:
                         print('status-wait, UNKNOWN data recev:', data, self.clientAddr)
                         self.STATUS = LOCAL_STATUS.ERROR
-                    else:
-                        print('no client, restart waiting.')
-                        self.STATUS = LOCAL_STATUS.WAIT
+                else:
+                    print('no client, restart waiting.')
+                    self.STATUS = LOCAL_STATUS.WAIT
 
             elif self.STATUS is SERVER_STATUS.START:
                 if self.clientAddr is not None:
@@ -94,6 +97,9 @@ class UdpRemoteThread(threading.Thread):
 
     def stop(self):
         self.STATUS = SERVER_STATUS.STOP
+        cmdUDP =  socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        cmdUDP.sendto('E', (self.localIp,self.localPort))
+
 
 if __name__ == '__main__':
     udptest = UdpRemoteThread()
@@ -102,4 +108,4 @@ if __name__ == '__main__':
     inCmd = raw_input()
     while(inCmd != 'end'):
         inCmd = raw_input()
-    udptest.udpServer.stop()
+    udptest.stop()
