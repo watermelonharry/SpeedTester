@@ -4,7 +4,7 @@
 Module implementing testermain.
 """
 
-from PyQt4.QtCore import pyqtSignature
+from PyQt4.QtCore import pyqtSignature, QThread, pyqtSignal
 from PyQt4.QtGui import QDialog, QApplication
 import sys
 from ui.Ui_testermain import Ui_Dialog
@@ -16,6 +16,9 @@ class testermain(QDialog, Ui_Dialog):
     """
     Class documentation goes here.
     """
+    #用于上传线程中的测试结果
+    updateSignal = pyqtSignal(object)
+
     def __init__(self, parent=None):
         """
         Constructor
@@ -28,6 +31,8 @@ class testermain(QDialog, Ui_Dialog):
         self.setFixedSize(331, 229)
         self.showWindow = showDataWindow()
         self.status = LOCAL_STATUS.WAIT
+        self.resultList = []  #保存测试结果
+        self.updateSignal.connect(self.receiveTestData)
 
     def Confirm(self, intArg):
         """
@@ -43,8 +48,7 @@ class testermain(QDialog, Ui_Dialog):
         ip = str(ipStr).split('.')
         result =  (len(ip) == 4 and len(filter(lambda x: x >= 0 and x <= 255, map(int, filter(lambda x:x.isdigit(), ip)))) == 4 and ip[0] != '0')
         if result is True:
-            self.Confirm(1)
-            return True
+            return self.Confirm(1)
         else:
             self.Confirm(2)
             return False
@@ -55,7 +59,13 @@ class testermain(QDialog, Ui_Dialog):
         Slot documentation goes here.
         """
         # TODO: not implemented yet
-        self.verifyIp(self.remoteIpInput.text())
+        if self.verifyIp(self.remoteIpInput.text()):
+            #todo：需要输入ip和port
+            tester = UdpClientQThread(updateSignal=self.updateSignal)
+            self.status = LOCAL_STATUS.START
+            tester.start()
+            #迷之等待，跑太快会报错
+            time.sleep(0.1)
 
     @pyqtSignature("")
     def on_startAutoTestBtn_clicked(self):
@@ -102,6 +112,11 @@ class testermain(QDialog, Ui_Dialog):
         """
         # TODO: not implemented yet
         pass
+
+    def receiveTestData(self, dataTuple):
+        self.resultList.append(dataTuple)
+        print(dataTuple)
+        self.status = LOCAL_STATUS.WAIT
 
     def updateChart(self, timeList, speedList):
         """
@@ -185,6 +200,116 @@ class testermain(QDialog, Ui_Dialog):
             file.writelines(content)
         self.showWindow.webView.reload()
         print timeStr,speedStr
+
+import time
+import socket
+from base.statusDict import LOCAL_STATUS as LOCAL_STATUS
+
+class UdpClientQThread(QThread):
+    def __init__(self, remoteIP='localhost', remotePort = 10230, bufferSize = 102400, updateSignal = None, parent = None):
+        super(UdpClientQThread, self).__init__(parent)
+        # QThread.__init__(parent)
+        self.STATUS = LOCAL_STATUS.WAIT
+        self.remoteIp = str(remoteIP)
+        self.remotePort = int(remotePort)
+        self.bufferSize = bufferSize
+        self.beginTime = time.time()
+        self.endTime = self.beginTime
+        self.dataSize = 0
+        self.costMS = 0
+        self.updateSignal = updateSignal
+
+        try:
+            self.remoteAddr = (self.remoteIp, self.remotePort)
+            self.udpClient = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.udpClient.settimeout(5)
+        except Exception as e:
+            print(e.message)
+            self.STATUS = LOCAL_STATUS.ERROR
+            self.remoteAddr = None
+
+    def run(self):
+        print('client RUNNNIG.')
+        time.sleep(1)
+        while(True):
+
+            if self.STATUS is LOCAL_STATUS.READY:
+                #开始测试
+                #reset时间
+                data, addr = self.udpClient.recvfrom(10)
+                if data == 'R':
+                    self.beginTime = time.time()
+                    data, addr = self.udpClient.recvfrom(self.bufferSize)
+                    self.endTime = time.time()
+                    self.dataSize = len(data)
+                    self.costMS = (self.endTime-self.beginTime-0.0001)*1000
+
+                    print('test FINISH:', str(self.dataSize) + 'Byte', 'time-'+str(self.costMS)+' ms')
+                    self.STATUS = LOCAL_STATUS.SUCCESS
+
+                else:
+                    print('RESET ERROR, restart test')
+                    self.STATUS = LOCAL_STATUS.ERROR
+                    break
+
+
+            elif self.STATUS is LOCAL_STATUS.WAIT:
+                #确认对方在线
+                #todo:需要加try包围，在无remote在线时会报error 100054
+                self.udpClient.sendto('S', self.remoteAddr)
+                try:
+                    data, addr = self.udpClient.recvfrom(10)
+                except Exception as e:
+                    if e.errno == 10054:
+                        print('server unreachable, check ip&port.')
+                    else:
+                        print('other error:', e)
+                    self.STATUS = LOCAL_STATUS.ERROR
+                    break
+
+                if data == 'A':
+                    print('status-wait, recv:', data, addr)
+                    self.STATUS = LOCAL_STATUS.READY
+                else:
+                    print('status-error: remote IP not online')
+                    self.STATUS = LOCAL_STATUS.ERROR
+
+            elif self.STATUS is LOCAL_STATUS.SUCCESS:
+                #结束进程，清理
+                break
+
+            if self.STATUS is LOCAL_STATUS.ERROR:
+                print('client ERROR, restart test')
+                self.dataSize = 0
+                self.costMS = 0
+                break
+        # 结束进程，清理
+        self.udpClient.close()
+        time.sleep(0.5)
+        del self.udpClient
+        self.udpClient = None
+        self.sendToParent()
+
+    def sendToParent(self):
+        """
+        发送测试数据至parent
+        :return:
+        datatuple: (successFlag, time, speed)
+        """
+        successFlag = self.STATUS is LOCAL_STATUS.SUCCESS
+        if successFlag:
+            timeStruct = time.gmtime(self.beginTime)
+            timeStr = ':'.join( str(i) for i in [(timeStruct.tm_hour+8)%24, timeStruct.tm_min, timeStruct.tm_sec])
+            speedInt = self.dataSize * 8 / self.costMS
+        else:
+            timeStr = '-'
+            speedInt = 0
+        self.updateSignal.emit((successFlag, timeStr, speedInt))
+
+
+    def getStatus(self):
+        return self.STATUS
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
