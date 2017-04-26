@@ -26,13 +26,13 @@ class UdpRemoteThread(threading.Thread):
             # self.udpServer.settimeout(5)
             self.udpServer.bind(Addr)
         except Exception as e:
-            print(e.message)
+            print('please check the IP and Port,', e.message)
             self.STATUS = SERVER_STATUS.ERROR
 
     def run(self):
         print('server run@ ', self.localIp, self.localPort)
         dataPack = None
-        while(self.STATUS is not SERVER_STATUS.ERROR):
+        while(self.STATUS is not SERVER_STATUS.STOP):
 
             if self.STATUS is SERVER_STATUS.WAIT:
                 print('server wait.')
@@ -45,41 +45,55 @@ class UdpRemoteThread(threading.Thread):
                     else:
                         print('other error: ', e)
                     self.STATUS = SERVER_STATUS.ERROR
+                    self.clientAddr = None
 
-                #todo:超时
-                if data == 'S':
+                #todo:超时功能
+                if data == 'S' and self.clientAddr is not None:
                     #确认回复
                     print('status-wait,SYN data recev:', data, self.clientAddr)
                     dataPack = 'T'* 50000
-                    time.sleep(6)
+                    # time.sleep(0.5)
                     self.udpServer.sendto('A', self.clientAddr)
                     self.STATUS = SERVER_STATUS.START
                 else:
-                    print('status-wait, UNKNOWN data recev:', data, self.clientAddr)
-                    self.STATUS = LOCAL_STATUS.ERROR
+                    if self.clientAddr is not None:
+                        print('status-wait, UNKNOWN data recev:', data, self.clientAddr)
+                        self.STATUS = LOCAL_STATUS.ERROR
+                    else:
+                        print('no client, restart waiting.')
+                        self.STATUS = LOCAL_STATUS.WAIT
 
-            if self.STATUS is SERVER_STATUS.START:
-                print('test begin.')
-                #开始发包
-                #RESET
-                self.udpServer.sendto('R',self.clientAddr)
-                time.sleep(0.0001)
-                #dataPack
-                self.udpServer.sendto(dataPack, self.clientAddr)
-                self.STATUS = SERVER_STATUS.END
+            elif self.STATUS is SERVER_STATUS.START:
+                if self.clientAddr is not None:
+                    print('test begin.')
+                    #开始发包
+                    #RESET
+                    self.udpServer.sendto('R',self.clientAddr)
+                    time.sleep(0.0001)
+                    #dataPack
+                    self.udpServer.sendto(dataPack, self.clientAddr)
+                    self.STATUS = SERVER_STATUS.END
+                else:
+                    print('no client addr, restart waiting.')
+                    self.STATUS = SERVER_STATUS.WAIT
 
-            if self.STATUS is SERVER_STATUS.END:
+
+            elif self.STATUS is SERVER_STATUS.END:
                 print('test end')
                 time.sleep(0.5)
                 self.STATUS = SERVER_STATUS.WAIT
                 self.clientAddr = None
     
-            if self.STATUS is LOCAL_STATUS.ERROR:
+            elif self.STATUS is LOCAL_STATUS.ERROR:
                 print('server ERROR:please check params')
                 break
+
         self.udpServer.close()
         del self.udpServer
         print('server shutdown')
+
+    def stop(self):
+        self.STATUS = SERVER_STATUS.STOP
 
 if __name__ == '__main__':
     udptest = UdpRemoteThread()
@@ -88,4 +102,4 @@ if __name__ == '__main__':
     inCmd = raw_input()
     while(inCmd != 'end'):
         inCmd = raw_input()
-    udptest.udpServer.close()
+    udptest.udpServer.stop()

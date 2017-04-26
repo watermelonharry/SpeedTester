@@ -29,7 +29,7 @@ class UdpClientThread(threading.Thread):
 
     def run(self):
         print('client RUNNNIG.')
-        while(self.STATUS is not LOCAL_STATUS.END):
+        while(True):
 
             if self.STATUS is LOCAL_STATUS.READY:
                 #开始测试
@@ -75,6 +75,7 @@ class UdpClientThread(threading.Thread):
             if self.STATUS is LOCAL_STATUS.END:
                 #结束进程，清理
                 print('test end.')
+                break
 
             if self.STATUS is LOCAL_STATUS.ERROR:
                 print('client ERROR, restart test')
@@ -84,6 +85,9 @@ class UdpClientThread(threading.Thread):
         time.sleep(0.5)
         del self.udpClient
         self.udpClient = None
+
+    def getStatus(self):
+        return self.STATUS
 
 if __name__ == '__main__':
     udptest = UdpClientThread()

@@ -15,6 +15,7 @@ class RemoteStatus():
         self.START = 2
         self.END = 3
         self.ERROR = 4
+        self.STOP = 5
 
 
 
