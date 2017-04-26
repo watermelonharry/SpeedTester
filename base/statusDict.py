@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 class LocalStatus():
+    """
+    本地client状态类
+    """
     def __init__(self):
         self.WAIT = 1
         self.READY = 2
@@ -10,6 +13,9 @@ class LocalStatus():
 
 
 class RemoteStatus():
+    """
+    远程Server状态类
+    """
     def __init__(self):
         self.WAIT = 1
         self.START = 2
@@ -18,9 +24,19 @@ class RemoteStatus():
         self.STOP = 5
 
 
+class TestStatus():
+    """
+    窗口运行状态类
+    """
+    def __init__(self):
+        self.IDLE = 1
+        self.SINGLE_TEST = 2
+        self.PLANNED_TEST = 3
+
 
 LOCAL_STATUS = LocalStatus()
 REMOTE_STATUS = RemoteStatus()
+TEST_STATUS = TestStatus()
 
 NOTICE_DICT = {
     0:u'无结果',

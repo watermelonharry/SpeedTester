@@ -9,7 +9,7 @@ from PyQt4.QtGui import QDialog, QApplication
 import sys
 from ui.Ui_testermain import Ui_Dialog
 from showdata import showDataWindow
-from base.statusDict import LOCAL_STATUS
+from base.statusDict import TEST_STATUS
 from func.popWindow import NoticeWindow
 
 class testermain(QDialog, Ui_Dialog):
@@ -30,7 +30,7 @@ class testermain(QDialog, Ui_Dialog):
         self.setupUi(self)
         self.setFixedSize(331, 229)
         self.showWindow = showDataWindow()
-        self.status = LOCAL_STATUS.WAIT
+        self.status = TEST_STATUS.IDLE
         self.resultList = []  #保存测试结果
         self.updateSignal.connect(self.receiveTestData)
         self.tester = None
@@ -115,7 +115,7 @@ class testermain(QDialog, Ui_Dialog):
     def receiveTestData(self, dataTuple):
         self.resultList.append(dataTuple)
         print(dataTuple)
-        self.status = LOCAL_STATUS.WAIT
+        self.status = TEST_STATUS.IDLE
         self.tester = None
 
     def updateChart(self, timeList, speedList):
@@ -205,7 +205,54 @@ import time
 import socket
 from base.statusDict import LOCAL_STATUS as LOCAL_STATUS
 
+class UdpTestManager(QThread):
+    """
+    测速管理员，用于管理单次测速，格式化结果
+    """
+    def __init__(self, repeatTime = 5, remoteIP='localhost', remotePort = 10230, updateSignal = None, parent = None):
+        super(UdpClientQThread, self).__init__(parent)
+        self.updateSignal = updateSignal
+        self.remoteIP = remoteIP
+        self.remotePort = remotePort
+
+        self.repeatTime = repeatTime
+        self.testTime = ''
+        self.avrTime = 0
+
+        #用于传递至单次测速类
+        self.innerSignal = pyqtSignal(object)
+        self.innerSignal.connect(self.processTestData)
+
+    def run(self):
+        """
+        运行类，根据repeatTime，重复测速，汇总测试数据
+        :return:
+        """
+        #todo：循环测试类
+
+
+    def processTestData(self, dataTuple):
+        """
+        处理来自UdpThread的测试结果
+        :param dataTuple: （FlagBool， timeStr， speedInt）
+        :return:
+        """
+        #todo:处理类
+        pass
+
+    def sendToParent(self, dataTuple):
+        """
+        将处理结果发送给上层窗口类
+        :param dataTuple: （FlagBool， timeStr， speedInt）
+        :return:
+        """
+        #todo：发送类
+        pass
+
 class UdpClientQThread(QThread):
+    """
+    单次测速类
+    """
     def __init__(self, remoteIP='localhost', remotePort = 10230, bufferSize = 102400, updateSignal = None, parent = None):
         super(UdpClientQThread, self).__init__(parent)
         # QThread.__init__(parent)
