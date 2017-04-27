@@ -38,6 +38,7 @@ class testermain(QDialog, Ui_Dialog):
         self.gapTime = 0        #int(timer seconds)
         self.timer = QTimer() #计时器QTimer
         self.timer.timeout.connect(self.doPlanWork)
+        self.remoteIp = 'localhost'
 
     def Confirm(self, intArg, strArg = None):
         """
@@ -53,9 +54,11 @@ class testermain(QDialog, Ui_Dialog):
         ip = str(ipStr).split('.')
         result =  (len(ip) == 4 and len(filter(lambda x: x >= 0 and x <= 255, map(int, filter(lambda x:x.isdigit(), ip)))) == 4 and ip[0] != '0')
         if result is True:
+            self.remoteIp = str(ipStr)
             return self.Confirm(1)
         else:
             self.Confirm(2)
+            self.remoteIp = 'localhost'
             return False
 
     def doPlanWork(self):
@@ -81,7 +84,7 @@ class testermain(QDialog, Ui_Dialog):
         if self.status is TEST_STATUS.IDLE:
             if self.verifyIp(self.remoteIpInput.text()):
                 #todo：需要输入ip和port
-                self.startOneTest()
+                self.startOneTest(ip = self.remoteIp)
                 self.status = TEST_STATUS.SINGLE_TEST
         else:
             self.Confirm(2001)
@@ -93,21 +96,18 @@ class testermain(QDialog, Ui_Dialog):
         """
         # TODO: not implemented yet
         if self.status is TEST_STATUS.IDLE:
+            if self.verifyIp(self.remoteIpInput.text()):
             #空闲状态，开始测试并改变UI、status
-            if self.Confirm(3001):
-                self.startOneTestBtn.setDisabled(True)
-                self.clearResultBtn.setDisabled(True)
-                self.gapTimeEdit.setDisabled(True)
-                self.remoteIpInput.setDisabled(True)
+                if self.Confirm(3001):
+                    self.startOneTestBtn.setDisabled(True)
+                    self.clearResultBtn.setDisabled(True)
+                    self.gapTimeEdit.setDisabled(True)
+                    self.remoteIpInput.setDisabled(True)
 
-                self.startAutoTestBtn.setText(_translate("Dialog","关闭定时测试",None))
-                self.startOneTest()
-                self.status = TEST_STATUS.PLANNED_TEST
-                self.timer.start(self.getSec(self.gapTimeEdit.time()) * 1000)
-                # print('test for html')
-                # timeList = ['1:10','1:20','1:30','1:40']
-                # speedList = [20,100,30,10]
-                # self.updateChart(timeList, speedList)
+                    self.startAutoTestBtn.setText(_translate("Dialog","关闭定时测试",None))
+                    self.startOneTest(ip= self.remoteIp)
+                    self.status = TEST_STATUS.PLANNED_TEST
+                    self.timer.start(self.getSec(self.gapTimeEdit.time()) * 1000)
 
         elif self.status is TEST_STATUS.PLANNED_TEST:
             if self.Confirm(3002):
@@ -177,7 +177,7 @@ class testermain(QDialog, Ui_Dialog):
 
     def startOneTest(self, ip = 'localhost', port = 10230):
         # todo：需要输入ip和port
-        self.tester = UdpTestManager(updateSignal=self.updateSignal)
+        self.tester = UdpTestManager(updateSignal=self.updateSignal, remoteIP= ip, remotePort = port)
         self.tester.start()
         time.sleep(0.5)
 
@@ -331,9 +331,7 @@ class UdpTestManager(QThread):
         print('test manager start.')
 
         ts = time.gmtime()
-        ts = [str(i) for i in [(ts.tm_hour + 8) % 24, ts.tm_min, ts.tm_sec]]
-        if len(ts[1]) == 1:
-            ts[1] = '0' + ts[1]
+        ts = map(lambda x: ('00' + x)[-2:], [str(i) for i in [(ts.tm_hour + 8) % 24, ts.tm_min, ts.tm_sec]])
         self.testTime = ':'.join(ts)
 
 

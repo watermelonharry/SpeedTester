@@ -100,15 +100,17 @@ class UdpRemoteThread(threading.Thread):
     def stop(self):
         self.STATUS = SERVER_STATUS.STOP
         cmdUDP =  socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        cmdUDP.sendto('E', (self.localIp,self.localPort))
-
+        if self.localIp == '0.0.0.0':
+            cmdUDP.sendto('E', ('localhost',self.localPort))
+        else:
+            cmdUDP.sendto('E', (self.localIp, self.localPort))
 
 if __name__ == '__main__':
     argList = sys.argv[1:]
     if len(argList) == 0:
-        udptest = UdpRemoteThread()
+        udptest = UdpRemoteThread(LocalIP='0.0.0.0')
     elif 'd' == argList[0] or 'debug' == argList[0]:
-        udptest = UdpRemoteThread(debug=True)
+        udptest = UdpRemoteThread(LocalIP='0.0.0.0', debug=True)
     udptest.start()
     inCmd = raw_input()
     while(inCmd != 'end'):
