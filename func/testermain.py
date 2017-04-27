@@ -31,9 +31,11 @@ class testermain(QDialog, Ui_Dialog):
         self.setFixedSize(331, 229)
         self.showWindow = showDataWindow()
         self.status = TEST_STATUS.IDLE
-        self.resultList = []  #保存测试结果
+        self.testTimeList = []      #保存测试时间 str
+        self.testSpeedList = []     #保存测试速度 int
         self.updateSignal.connect(self.receiveTestData)
         self.tester = None
+        self.gapTime = 0        #int(timer seconds)
         self.timer = None #计时器QTimer
 
     def Confirm(self, intArg, strArg = None):
@@ -99,7 +101,8 @@ class testermain(QDialog, Ui_Dialog):
         """
         if self.status is TEST_STATUS.IDLE:
             if self.Confirm(4001):
-                self.resultList = []
+                self.testSpeedList = []
+                self.testTimeList = []
         else:
             self.Confirm(2001)
 
@@ -126,10 +129,13 @@ class testermain(QDialog, Ui_Dialog):
         Slot documentation goes here.
         """
         # TODO: not implemented yet
-        print('time edit finished')
-        self.Confirm(5001, u'哈')
-        print(self.gapTimeEdit.time())
-
+        if self.status is TEST_STATUS.IDLE:
+            print('time edit finished')
+            if self.Confirm(5001, self.getGap(self.gapTimeEdit.time())):
+                print(self.gapTimeEdit.time())
+                self.gapTime = self.getSec(self.gapTimeEdit.time())
+        else:
+            self.Confirm(2001)
 
     @pyqtSignature("QTime")
     def on_gapTimeEdit_timeChanged(self, date):
@@ -141,7 +147,7 @@ class testermain(QDialog, Ui_Dialog):
         """
         # TODO: not implemented yet
         print('time changed')
-        print(self.gapTimeEdit.time())
+        print(self.gapTimeEdit.time(), self.getSec(self.gapTimeEdit.time()))
 
     def startOneTest(self, ip = 'localhost', port = 10230):
         # todo：需要输入ip和port
@@ -149,94 +155,117 @@ class testermain(QDialog, Ui_Dialog):
         self.tester.start()
 
     def receiveTestData(self, dataTuple):
-        self.resultList.append(dataTuple)
         print('main window recv: ', dataTuple)
         self.status = TEST_STATUS.IDLE
         del self.tester
         self.tester = None
+        if dataTuple[0] is True:
+            self.testTimeList.append(dataTuple[1])
+            self.testSpeedList.append(dataTuple[2])
+        if len(self.testSpeedList) > 0 and len(self.testTimeList) > 0:
+            self.updateChart(self.testTimeList, self.testSpeedList)
 
-    def updateChart(self, timeList, speedList):
+    def updateChart(self, timeStrList, speedIntList):
         """
         用于更新数据至本地图表
         :param timeList: 时间列表，eg. ['1:10','1:20','1:30','1:40']
         :param speedList: 速度列表， eg. [20,100,30,10]
         :return:
         """
-        timeList = ['\''+str(c)+'\'' for c in timeList]
-        timeStr = ','.join(timeList)
-        speedStr = ','.join([str(c) for c in speedList])
-        content = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <script src="static/echarts.js"></script>
-        </head>
-        <body>
-            <div id="main" style="width: 690px;height:430px;"></div>
-            <script type="text/javascript">
-                var myChart = echarts.init(document.getElementById('main'));
-                option = {
-                    title: {
-                        text: '网速测试结果',
-                        subtext: '@heyu'
-                    },
-                    tooltip: {
-                        trigger: 'axis'
-                    },
-                    legend: {
-                        data:['网速测试']
-                    },
-                    toolbox: {
-                        show: true,
-                        feature: {
-                            dataZoom: {
-                                yAxisIndex: 'none'
-                            },
-                            dataView: {readOnly: false},
-                            magicType: {type: ['line', 'bar']},
-                            restore: {},
-                        }
-                    },
-                    xAxis:  {
-                        type: 'category',
-                        boundaryGap: false,
-                        data: [%s]
-                    },
-                    yAxis: {
-                        type: 'value',
-                        axisLabel: {
-                            formatter: '{value} Kbps'
-                        }
-                    },
-                    series: [
-                        {
-                            name:'网速测试',
-                            type:'line',
-                            data:[%s],
-                            markPoint: {
-                                data: [
-                                    {type: 'max', name: '最大值'},
-                                    {type: 'min', name: '最小值'}
-                                ]
-                            },
-                            markLine: {
-                                data: [
-                                    {type: 'average', name: '平均值'}
-                                ]
+        try:
+            timeList = ['\''+str(c)+'\'' for c in timeStrList]
+            timeStr = ','.join(timeList)
+            speedStr = ','.join([str(c) for c in speedIntList])
+            content = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <script src="static/echarts.js"></script>
+            </head>
+            <body>
+                <div id="main" style="width: 690px;height:430px;"></div>
+                <script type="text/javascript">
+                    var myChart = echarts.init(document.getElementById('main'));
+                    option = {
+                        title: {
+                            text: '网速测试结果',
+                            subtext: '@heyu'
+                        },
+                        tooltip: {
+                            trigger: 'axis'
+                        },
+                        legend: {
+                            data:['网速测试']
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
                             }
-                        }
-                    ]
-                    };
-                myChart.setOption(option);
-            </script>
-        </body>
-        </html>
-        """ %(timeStr,speedStr)
-        with open('echart/show.html','w') as file:
-            file.writelines(content)
-        self.showWindow.webView.reload()
-        print timeStr,speedStr
+                        },
+                        xAxis:  {
+                            type: 'category',
+                            boundaryGap: false,
+                            data: [%s]
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLabel: {
+                                formatter: '{value} Kbps'
+                            }
+                        },
+                        series: [
+                            {
+                                name:'网速测试',
+                                type:'line',
+                                data:[%s],
+                                markPoint: {
+                                    data: [
+                                        {type: 'max', name: '最大值'},
+                                        {type: 'min', name: '最小值'}
+                                    ]
+                                },
+                                markLine: {
+                                    data: [
+                                        {type: 'average', name: '平均值'}
+                                    ]
+                                }
+                            }
+                        ]
+                        };
+                    myChart.setOption(option);
+                </script>
+            </body>
+            </html>
+            """ %(timeStr,speedStr)
+            with open('echart/show.html','w') as file:
+                file.writelines(content)
+            self.showWindow.webView.reload()
+            print timeStr,speedStr
+        except Exception as e:
+            print('error in updateChart', e)
+
+    def getSec(self, QTimeObj):
+        return (QTimeObj.hour() * 24 + QTimeObj.miniute()) * 60 + QTimeObj.second
+
+    def getGap(self, QTimeObj):
+        return ':'.join(str(i) for i in [QTimeObj.hour(), QTimeObj.minite(), QTimeObj.second()])
+
+    def mockManagerUpdate(self):
+        """
+        用于测试来自manager的datatuple上报/singal的emit和recv正常，updateChart功能正常
+        :return:
+        """
+        ts = str(int(time.time()))
+        dataTest = (True, ts[-4:], int(ts[-1:])*12)
+        print('test btn:', dataTest)
+        self.updateSignal.emit(dataTest)
 
 import time
 import socket
@@ -412,6 +441,7 @@ class UdpClientQThread(QThread):
             timeStr = '-'
             speedInt = 0
         self.updateSignal.emit((successFlag, timeStr, speedInt))
+
 
 
     def getStatus(self):
