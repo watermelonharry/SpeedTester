@@ -1,73 +1,68 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <!-- 引入 ECharts 文件 -->
-    <script src="static/echarts.js"></script>
-</head>
-<body>
-    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-    <div id="main" style="width: 690px;height:430px;"></div>
-    <script type="text/javascript">
-        // 基于准备好的dom，初始化echarts实例
-        var myChart = echarts.init(document.getElementById('main'));
 
-        // 指定图表的配置项和数据
-        option = {
-			title: {
-			    text: '网速测试结果',
-			},
-			tooltip: {
-			    trigger: 'axis'
-			},
-			legend: {
-			    data:['网速测试']
-			},
-			toolbox: {
-			    show: true,
-			    feature: {
-			        dataZoom: {
-			            yAxisIndex: 'none'
-			        },
-			        dataView: {readOnly: false},
-			        magicType: {type: ['line', 'bar']},
-			        restore: {},
-			    }
-			},
-			xAxis:  {
-			    type: 'category',
-			    boundaryGap: false,
-			    data: ['11:00','11:02','11:04','11:06','11:08','11:10','11:12','11:14']
-			},
-			yAxis: {
-			    type: 'value',
-			    axisLabel: {
-			        formatter: '{value} Kbps'
-			    }
-			},
-			series: [
-			    {
-			        name:'网速测试',
-			        type:'line',
-			        data:[110, 11, 15, 130, 12, 313, 10, 11],
-			        markPoint: {
-			            data: [
-			                {type: 'max', name: '最大值'},
-			                {type: 'min', name: '最小值'}
-			            ]
-			        },
-			        markLine: {
-			            data: [
-			                {type: 'average', name: '平均值'}
-			            ]
-			        }
-			    }
-			]
-			};
-
-
-        // 使用刚指定的配置项和数据显示图表。
-        myChart.setOption(option);
-    </script>
-</body>
-</html>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <script src="static/echarts.js"></script>
+            </head>
+            <body>
+                <div id="main" style="width: 690px;height:430px;"></div>
+                <script type="text/javascript">
+                    var myChart = echarts.init(document.getElementById('main'));
+                    option = {
+                        title: {
+                            text: '网速测试结果',
+                            subtext: '@heyu'
+                        },
+                        tooltip: {
+                            trigger: 'axis'
+                        },
+                        legend: {
+                            data:['网速测试']
+                        },
+                        toolbox: {
+                            show: true,
+                            feature: {
+                                dataZoom: {
+                                    yAxisIndex: 'none'
+                                },
+                                dataView: {readOnly: false},
+                                magicType: {type: ['line', 'bar']},
+                                restore: {},
+                            }
+                        },
+                        xAxis:  {
+                            type: 'category',
+                            boundaryGap: false,
+                            data: ['16:20:32','16:21:33','16:22:33','16:23:33','16:24:33','16:25:33','16:26:33','16:27:33','16:28:33','16:29:33','16:30:33','16:31:33','16:32:33','16:33:33','16:34:33']
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLabel: {
+                                formatter: '{value} Kbps'
+                            }
+                        },
+                        series: [
+                            {
+                                name:'网速测试',
+                                type:'line',
+                                data:[872,179,954,113,1252,1139,548,508,144,193,274,336,200,743,150],
+                                markPoint: {
+                                    data: [
+                                        {type: 'max', name: '最大值'},
+                                        {type: 'min', name: '最小值'}
+                                    ]
+                                },
+                                markLine: {
+                                    data: [
+                                        {type: 'average', name: '平均值'}
+                                    ]
+                                }
+                            }
+                        ]
+                        };
+                    myChart.setOption(option);
+                </script>
+            </body>
+            </html>
+            

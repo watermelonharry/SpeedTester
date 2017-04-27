@@ -36,7 +36,8 @@ class testermain(QDialog, Ui_Dialog):
         self.updateSignal.connect(self.receiveTestData)
         self.tester = None
         self.gapTime = 0        #int(timer seconds)
-        self.timer = None #计时器QTimer
+        self.timer = QTimer() #计时器QTimer
+        self.timer.timeout.connect(self.doPlanWork)
 
     def Confirm(self, intArg, strArg = None):
         """
@@ -56,6 +57,20 @@ class testermain(QDialog, Ui_Dialog):
         else:
             self.Confirm(2)
             return False
+
+    def doPlanWork(self):
+        """
+        定时器触发动作
+        :return:
+        """
+        if self.status is TEST_STATUS.PLANNED_TEST:
+            if self.tester is None:
+                self.startOneTest()
+                pass
+            print(time.asctime() + ':on time test')
+        else:
+            self.timer.stop()
+            print('timer stop')
 
     @pyqtSignature("")
     def on_startOneTestBtn_clicked(self):
@@ -80,18 +95,29 @@ class testermain(QDialog, Ui_Dialog):
         if self.status is TEST_STATUS.IDLE:
             #空闲状态，开始测试并改变UI、status
             if self.Confirm(3001):
-                self.startAutoTestBtn.setText(_translate("Dialog","关闭定时测试",None))
-                self.status = TEST_STATUS.PLANNED_TEST
+                self.startOneTestBtn.setDisabled(True)
+                self.clearResultBtn.setDisabled(True)
+                self.gapTimeEdit.setDisabled(True)
+                self.remoteIpInput.setDisabled(True)
 
+                self.startAutoTestBtn.setText(_translate("Dialog","关闭定时测试",None))
+                self.startOneTest()
+                self.status = TEST_STATUS.PLANNED_TEST
+                self.timer.start(self.getSec(self.gapTimeEdit.time()) * 1000)
                 # print('test for html')
                 # timeList = ['1:10','1:20','1:30','1:40']
                 # speedList = [20,100,30,10]
                 # self.updateChart(timeList, speedList)
 
         elif self.status is TEST_STATUS.PLANNED_TEST:
-            self.startAutoTestBtn.setText(_translate("Dialog","开始定时测试",None))
-            self.status = TEST_STATUS.IDLE
-
+            if self.Confirm(3002):
+                self.startOneTestBtn.setDisabled(False)
+                self.clearResultBtn.setDisabled(False)
+                self.gapTimeEdit.setDisabled(False)
+                self.remoteIpInput.setDisabled(False)
+                self.timer.stop()
+                self.startAutoTestBtn.setText(_translate("Dialog","开始定时测试",None))
+                self.status = TEST_STATUS.IDLE
 
 
     @pyqtSignature("")
@@ -153,17 +179,20 @@ class testermain(QDialog, Ui_Dialog):
         # todo：需要输入ip和port
         self.tester = UdpTestManager(updateSignal=self.updateSignal)
         self.tester.start()
+        time.sleep(0.5)
 
     def receiveTestData(self, dataTuple):
         print('main window recv: ', dataTuple)
-        self.status = TEST_STATUS.IDLE
+        if self.status is not TEST_STATUS.PLANNED_TEST:
+            self.status = TEST_STATUS.IDLE
         del self.tester
         self.tester = None
         if dataTuple[0] is True:
             self.testTimeList.append(dataTuple[1])
-            self.testSpeedList.append(dataTuple[2])
-        if len(self.testSpeedList) > 0 and len(self.testTimeList) > 0:
+            self.testSpeedList.append(int(dataTuple[2]))
             self.updateChart(self.testTimeList, self.testSpeedList)
+        else:
+            self.Confirm(2002)
 
     def updateChart(self, timeStrList, speedIntList):
         """
@@ -252,10 +281,10 @@ class testermain(QDialog, Ui_Dialog):
             print('error in updateChart', e)
 
     def getSec(self, QTimeObj):
-        return (QTimeObj.hour() * 24 + QTimeObj.miniute()) * 60 + QTimeObj.second
+        return (QTimeObj.hour() * 24 + QTimeObj.minute()) * 60 + QTimeObj.second()
 
     def getGap(self, QTimeObj):
-        return ':'.join(str(i) for i in [QTimeObj.hour(), QTimeObj.minite(), QTimeObj.second()])
+        return ':'.join(str(i) for i in [QTimeObj.hour(), QTimeObj.minute(), QTimeObj.second()])
 
     def mockManagerUpdate(self):
         """
@@ -288,6 +317,7 @@ class UdpTestManager(QThread):
         self.avrSpeed = 0
 
         self.resultList =[] #用于存储上报结果
+        self.singleTester = None
 
         #用于传递至单次测速类
         self.innerSignal.connect(self.processTestData)
@@ -301,14 +331,18 @@ class UdpTestManager(QThread):
         print('test manager start.')
 
         ts = time.gmtime()
-        self.testTime = ':'.join(str(i) for i in [(ts.tm_hour + 8) % 24, ts.tm_min, ts.tm_sec])
+        ts = [str(i) for i in [(ts.tm_hour + 8) % 24, ts.tm_min, ts.tm_sec]]
+        if len(ts[1]) == 1:
+            ts[1] = '0' + ts[1]
+        self.testTime = ':'.join(ts)
+
 
         for i in range(self.repeatTime):
-            singleTester = UdpClientQThread(self.remoteIP, self.remotePort,updateSignal=self.innerSignal)
-            singleTester.start()
-            while singleTester.isRunning():
+            self.singleTester = UdpClientQThread(self.remoteIP, self.remotePort,updateSignal=self.innerSignal)
+            self.singleTester.start()
+            while self.singleTester.isRunning():
                 time.sleep(0.5)
-            del singleTester
+            del self.singleTester
             print('test finish, no.' + str(i+1))
 
         self.sendToParent()
@@ -378,7 +412,7 @@ class UdpClientQThread(QThread):
                     data, addr = self.udpClient.recvfrom(self.bufferSize)
                     self.endTime = time.time()
                     self.dataSize = len(data)
-                    self.costMS = (self.endTime-self.beginTime-0.0001)*1000
+                    self.costMS = (self.endTime - self.beginTime + 0.0001) * 1000
 
                     print('test FINISH:', str(self.dataSize) + 'Byte', 'time-'+str(self.costMS)+' ms')
                     self.STATUS = LOCAL_STATUS.SUCCESS

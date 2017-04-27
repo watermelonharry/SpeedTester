@@ -97,9 +97,9 @@ class Ui_Dialog(object):
         self.label_4.setText(_translate("Dialog", "HH/mm/SS", None))
         self.startOneTestBtn.setText(_translate("Dialog", "开始单次测试", None))
         self.startAutoTestBtn.setText(_translate("Dialog", "开始定时测试", None))
-        self.showResultBtn.setText(_translate("Dialog", "定时测试结果", None))
-        self.remoteIpInput.setText(_translate("Dialog", "192.168.1.137", None))
-        self.clearResultBtn.setText(_translate("Dialog", "清除测试记录", None))
+        self.showResultBtn.setText(_translate("Dialog", "查看测试结果", None))
+        self.remoteIpInput.setText(_translate("Dialog", "127.0.0.1", None))
+        self.clearResultBtn.setText(_translate("Dialog", "清除测试结果", None))
 
 
 if __name__ == "__main__":

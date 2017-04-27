@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import sys
 import threading
 import time
 import socket
@@ -7,7 +7,7 @@ from statusDict import LOCAL_STATUS as LOCAL_STATUS
 from statusDict import REMOTE_STATUS as SERVER_STATUS
 
 class UdpRemoteThread(threading.Thread):
-    def __init__(self, LocalIP = 'localhost', LocalPort = 10230, bufferSize = 102400):
+    def __init__(self, LocalIP = 'localhost', LocalPort = 10230, bufferSize = 102400, debug = False):
         threading.Thread.__init__(self)
 
         self.STATUS = SERVER_STATUS.WAIT
@@ -19,6 +19,7 @@ class UdpRemoteThread(threading.Thread):
         self.dataSize = 0
         self.clientAddr = None
         self.udpServer = None
+        self.DEBUG = debug
 
         try:
             Addr = (self.localIp, self.localPort)
@@ -30,7 +31,7 @@ class UdpRemoteThread(threading.Thread):
             self.STATUS = SERVER_STATUS.ERROR
 
     def run(self):
-        print('server run@ ', self.localIp, self.localPort)
+        print('server run@ ', self.localIp, self.localPort, self.DEBUG)
         dataPack = None
         while(self.STATUS is not SERVER_STATUS.STOP):
 
@@ -52,7 +53,6 @@ class UdpRemoteThread(threading.Thread):
                     #确认回复
                     print('status-wait,SYN data recev:', data, self.clientAddr)
                     dataPack = 'T'* 50000
-                    # time.sleep(0.5)
                     self.udpServer.sendto('A', self.clientAddr)
                     self.STATUS = SERVER_STATUS.START
                 elif data == 'E':
@@ -72,7 +72,9 @@ class UdpRemoteThread(threading.Thread):
                     #开始发包
                     #RESET
                     self.udpServer.sendto('R',self.clientAddr)
-                    time.sleep(0.0001)
+                    if self.DEBUG:
+                        import random
+                        time.sleep(5 * random.random())
                     #dataPack
                     self.udpServer.sendto(dataPack, self.clientAddr)
                     self.STATUS = SERVER_STATUS.END
@@ -102,9 +104,12 @@ class UdpRemoteThread(threading.Thread):
 
 
 if __name__ == '__main__':
-    udptest = UdpRemoteThread()
+    argList = sys.argv[1:]
+    if len(argList) == 0:
+        udptest = UdpRemoteThread()
+    elif 'd' == argList[0] or 'debug' == argList[0]:
+        udptest = UdpRemoteThread(debug=True)
     udptest.start()
-
     inCmd = raw_input()
     while(inCmd != 'end'):
         inCmd = raw_input()
